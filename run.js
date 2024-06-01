@@ -1,26 +1,5 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-
-const app = express();
-const port = process.env.PORT || 5000;
-
-app.use(cors());
-app.use(express.json());
-
-// middle ware
-
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cardoctors.ppdajwi.mongodb.net/?retryWrites=true&w=majority&appName=CarDoctors`;
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
+const { ObjectId } = require('mongodb');
+const { client, app } = require('.');
 
 async function run() {
   try {
@@ -49,34 +28,12 @@ async function run() {
     });
 
     // booking service
-    // http://localhost:5000/bookings?email=${user.email}
-
     // get all data for specific user from db
-
-    app.get('/bookings', async (req, res) => {
-      // console.log(req.query.email);
-      let query = {};
-      if (req.query.email) {
-        query = { email: req.query.email };
-      }
-      const result = await bookingCollection.find(query).toArray();
-      res.send(result);
-    });
-
     // post data for booking or send data to server
     app.post('/bookings', async (req, res) => {
       const booking = req.body;
       console.log(booking);
       const result = await bookingCollection.insertOne(booking);
-      res.send(result);
-    });
-
-    // delete data from db
-
-    app.delete('/bookings/:id', async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await bookingCollection.deleteOne(query);
       res.send(result);
     });
 
@@ -92,12 +49,4 @@ async function run() {
     // await client.close();
   }
 }
-run().catch(console.dir);
-
-app.get('/', (req, res) => {
-  res.send('Car Doctors Server is Running');
-});
-
-app.listen(port, () => {
-  console.log(`Car Doctor Is Running In Port : ${port}`);
-});
+exports.run = run;
