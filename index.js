@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
@@ -32,20 +31,6 @@ const client = new MongoClient(uri, {
 
 // create own// middlewares
 
-const verifyToken = async (req, res, next) => {
-  const token = req.cookies?.token;
-  if (!token) {
-    return res.status(401).send({ message: 'unauthorized access' });
-  }
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).send({ message: 'unauthorized access' });
-    }
-    req.user = decoded;
-    next();
-  });
-};
-
 async function run() {
   try {
     const carDoctorsCollection = client
@@ -53,23 +38,6 @@ async function run() {
       .collection('Services');
 
     const bookingCollection = client.db('CarDoctorsDB').collection('Bookings');
-
-    // auth related api jwt
-    app.post('/jwt', async (req, res) => {
-      const user = req.body;
-      console.log(user);
-
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: '1h',
-      });
-
-      res
-        .cookie('token', token, {
-          httpOnly: true,
-          secure: false,
-        })
-        .send({ success: true });
-    });
 
     // get one services by id
     app.get('/services/:id', async (req, res) => {
@@ -96,13 +64,6 @@ async function run() {
 
     app.get('/bookings', verifyToken, async (req, res) => {
       // console.log(req.query.email);
-      // console.log(req.user.email);
-
-      // console.log('ttttt token', req.cookies.token) for jwt
-      // console.log('user in the valid token', req.user);
-      if (req.query.email !== req.user.email) {
-        return res.status(403).send({ message: 'forbidden access' });
-      }
 
       // for get specific order booking
       let query = {};
