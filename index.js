@@ -30,6 +30,22 @@ const client = new MongoClient(uri, {
   },
 });
 
+// create own// middlewares
+
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: 'unauthorized access' });
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: 'unauthorized access' });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
 async function run() {
   try {
     const carDoctorsCollection = client
@@ -73,14 +89,22 @@ async function run() {
       res.send(services);
     });
 
-    // booking service
+    // bookings api
     // http://localhost:5000/bookings?email=${user.email}
 
     // get all data for specific user from db
 
-    app.get('/bookings', async (req, res) => {
-      console.log(req.query.email);
-      console.log('ttttt token', req.cookies.token);
+    app.get('/bookings', verifyToken, async (req, res) => {
+      // console.log(req.query.email);
+      // console.log(req.user.email);
+
+      // console.log('ttttt token', req.cookies.token) for jwt
+      // console.log('user in the valid token', req.user);
+      if (req.query.email !== req.user.email) {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+
+      // for get specific order booking
       let query = {};
       if (req.query.email) {
         query = { email: req.query.email };
