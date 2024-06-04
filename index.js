@@ -12,6 +12,7 @@ var jwt = require('jsonwebtoken');
 app.use(
   cors({
     origin: [
+      'http://localhost:5173',
       'https://cars-doctors-website.web.app',
       'https://cars-doctors-website.firebaseapp.com',
     ],
